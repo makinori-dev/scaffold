@@ -2,6 +2,7 @@
 # General
 
 MN_SRC   := lib/makinori
+MN_BIN   := $(MN_SRC)/build/bin
 MN_LIB   := $(MN_SRC)/build/lib
 MN_ARS   := $(MN_LIB)/libmakinori.a $(MN_LIB)/liblua.a $(MN_LIB)/libwebsockets.a
 
@@ -14,7 +15,9 @@ LDLIBS    =
 # ==================================================================================
 # Recipes
 
-.PHONY: clean prune
+.PHONY: all clean docs prune
+
+all: manage
 
 manage: LDLIBS += -lmakinori -llua -lm -lwebsockets
 manage: LDFLAGS += -L$(MN_LIB)
@@ -24,9 +27,16 @@ manage: manage.o $(MN_ARS)
 $(MN_ARS):
 	cd $(MN_SRC) && $(MAKE) BUILD_TYPE=Release
 
+docs:
+	cd $(MN_SRC) && $(MAKE) docs
+	echo "#!/bin/sh" > docs
+	echo "cd $(MN_SRC) && exec build/bin/docs" >> docs
+	chmod +x docs
+
 clean:
 	find . -name "*.o" -not -path "./lib/*" -delete
 	if [ -f manage ]; then rm manage; fi
+	if [ -f docs ]; then rm docs; fi
 
 prune: clean
 	if [ -d lib/makinori/build ]; then rm -r lib/makinori/build; fi

@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MN_CMDLINE_MAX_FLAGS 4
-#define MN_CMDLINE_MAX_ARITY 2
-
 #include "makinori.h"
 
 // =================================================================================
