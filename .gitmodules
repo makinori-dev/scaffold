@@ -1,0 +1,3 @@
+[submodule "lib/makinori"]
+	path = lib/makinori
+	url = https://github.com/makinori-dev/makinori.git

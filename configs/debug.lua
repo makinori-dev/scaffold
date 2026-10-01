@@ -1,0 +1,5 @@
+COROUTINE_PAGES = 8
+
+LOG_LEVEL = 'debug'
+
+PORT = 1314

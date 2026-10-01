@@ -1,0 +1,5 @@
+COROUTINE_PAGES = 16
+
+LOG_LEVEL = 'notice'
+
+PORT = 1314

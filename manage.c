@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MN_CMDLINE_MAX_FLAGS 4
+#define MN_CMDLINE_MAX_ARITY 2
+
+#include "makinori.h"
+
+// =================================================================================
+// Router
+
+static struct mn_status
+handle_index(struct mn_request req, struct mn_response *const res)
+{
+  return mn_response_write(res, mn_str_lit("Hello, world"));
+}
+
+static struct mn_route route_index = {
+    .method = MN_METHOD_GET,
+    .pattern = mn_str_lit("/"),
+    .handler = handle_index};
+
+// =================================================================================
+// Main
+
+int main(int argc, char const *argv[argc])
+{
+  struct mn_status status = {};
+
+  struct mn_flag flag_help = {
+      .sflag = mn_str_lit("h"),
+      .lflag = mn_str_lit("help"),
+      .arity = 0,
+  };
+
+  struct mn_flag flag_config = {
+      .sflag = mn_str_lit("c"),
+      .lflag = mn_str_lit("config"),
+      .arity = 1,
+  };
+
+  struct mn_cmdline cl = {.flags = {&flag_help, &flag_config}};
+  status = mn_cmdline_parse(argc, argv, &cl);
+
+  if (status.error) {
+    return EXIT_FAILURE;
+  }
+
+  if (cl.action.len == 0 || flag_help.set) {
+    printf(
+        "Usage: %s [run]\n"
+        "-h                   Print this help description.\n"
+        "-c, --config <FILE>  Load an optional config file.\n",
+        argv[0]);
+    return EXIT_SUCCESS;
+  }
+
+  struct mn_config config = {};
+  status = flag_config.set ? mn_config_load_file(flag_config.vals[0], &config)
+                           : mn_config_load(&config);
+
+  if (status.error) {
+    return EXIT_FAILURE;
+  }
+
+  // Any previously emitted logs were errors. Therefore setting this now behaves
+  // the same as if we were to have set it earlier.
+  mn_log_set_level(config.log_level);
+
+  if (mn_view_eq(cl.action.view, mn_view_lit("run"))) {
+    struct mn_server server = {.config = config, .route = route_index};
+    status = mn_server_run(&server);
+  } else {
+    status = MN_ERROR_EMIT(MN_ERROR_INVALID_ARG, "Unknown action %s", cl.action.ss);
+  }
+
+  mn_config_unload(&config);
+  return status.error ? EXIT_FAILURE : EXIT_SUCCESS;
+}
